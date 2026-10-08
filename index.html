@@ -13,6 +13,7 @@
       --text: #e6edf3;
       --text-dim: #8b949e;
       --border: #30363d;
+      --danger: #da3633;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
@@ -30,14 +31,15 @@
     /* Security Overlay / Login Modal */
     #authModal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(13, 17, 23, 0.95); display: flex; align-items: center;
+      background: rgba(13, 17, 23, 0.98); display: flex; align-items: center;
       justify-content: center; z-index: 999;
     }
     .auth-box {
       background: var(--bg-card); padding: 25px; border-radius: 12px;
       border: 1px solid var(--border); width: 90%; max-width: 380px; text-align: center;
     }
-    .auth-box h2 { color: var(--accent); margin-bottom: 15px; font-size: 18px; }
+    .auth-box h2 { color: var(--accent); margin-bottom: 10px; font-size: 18px; }
+    .auth-box p { font-size: 13px; color: var(--text-dim); margin-bottom: 15px; }
     .auth-box input {
       width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px;
       border: 1px solid var(--border); background: #0d1117; color: #fff; text-align: center; font-size: 15px;
@@ -49,6 +51,7 @@
     }
     .btn:hover { background: #238636; }
     .btn-admin { background: #388bfd; margin-top: 5px; }
+    .btn-danger { background: var(--danger); padding: 4px 8px; font-size: 12px; width: auto; margin: 0; }
 
     .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
 
@@ -69,16 +72,12 @@
       overflow: hidden; margin-top: 15px; margin-bottom: 20px;
     }
     .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; background: #000; }
-    .video-wrapper iframe, .video-wrapper video {
+    .video-wrapper iframe {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
     }
     .player-controls {
       padding: 12px; display: flex; align-items: center; justify-content: space-between;
       background: #0f141c; border-top: 1px solid var(--border); font-size: 13px;
-    }
-    .speed-select {
-      background: var(--bg-dark); color: #fff; border: 1px solid var(--border);
-      padding: 5px; border-radius: 4px;
     }
 
     /* Chapter List */
@@ -107,16 +106,24 @@
     /* Admin Panel Modal */
     #adminModal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000;
+      background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 1000;
     }
     .admin-box {
       background: var(--bg-card); border: 1px solid var(--border); padding: 20px;
-      border-radius: 10px; width: 90%; max-width: 450px;
+      border-radius: 10px; width: 92%; max-width: 480px; max-height: 90vh; overflow-y: auto;
     }
-    .admin-box select {
-      width: 100%; padding: 10px; margin: 8px 0; background: #0d1117; color: #fff; border: 1px solid var(--border); border-radius: 6px;
+    .admin-box select, .admin-box input {
+      width: 100%; padding: 10px; margin: 6px 0; background: #0d1117; color: #fff; border: 1px solid var(--border); border-radius: 6px;
     }
-    .close-btn { background: #da3633; margin-top: 8px; }
+    .section-title {
+      font-size: 15px; color: var(--accent); border-bottom: 1px solid var(--border); padding-bottom: 5px; margin-top: 15px; margin-bottom: 10px;
+    }
+    .student-list-item {
+      display: flex; justify-content: space-between; align-items: center; background: #0d1117;
+      padding: 8px 12px; border-radius: 6px; margin-bottom: 6px; border: 1px solid var(--border); font-size: 13px;
+    }
+    .close-btn { background: var(--danger); margin-top: 15px; }
+    #errorMsg { color: #f85149; font-size: 13px; margin-top: 8px; display: none; }
   </style>
 </head>
 <body>
@@ -127,18 +134,14 @@
     <p>HSC Science & General Subjects Smart Video Platform</p>
   </header>
 
-  <!-- Login/OTP Security Modal -->
+  <!-- Login Verification Modal -->
   <div id="authModal">
     <div class="auth-box">
-      <h2>🔐 স্টুডেন্ট সিকিউরিটি লগইন</h2>
-      <p style="font-size:12px; color:#8b949e; margin-bottom:10px;">আপনার রেজিস্টার্ড মোবাইল নম্বর দিয়ে প্রবেশ করুন</p>
-      <input type="text" id="phoneInput" placeholder="মোবাইল নম্বর (e.g. 017xxxxxxxx)">
-      <button class="btn" onclick="sendOTP()">OTP পাঠান</button>
-      
-      <div id="otpSection" style="display:none; margin-top:10px;">
-        <input type="text" id="otpInput" placeholder="4-ডিজিটের OTP কোড (Demo: 1234)">
-        <button class="btn" onclick="verifyOTP()">লগইন নিশ্চিত করুন</button>
-      </div>
+      <h2>🔐 স্টুডেন্ট সিকিউরিটি ভেরিফিকেশন</h2>
+      <p>আপনার অনুমোদিত মোবাইল নম্বর বা রোল নম্বরটি লিখুন</p>
+      <input type="text" id="studentIdInput" placeholder="মোবাইল বা রোল নম্বর (e.g. 01711111111)">
+      <button class="btn" onclick="verifyStudent()">প্রবেশ করুন</button>
+      <div id="errorMsg">⚠️ ক্ষমা করবেন! আপনার নম্বরটি অনুমোদিত তালিকায় নেই। শিক্ষকের সাথে যোগাযোগ করুন।</div>
     </div>
   </div>
 
@@ -159,15 +162,6 @@
       </div>
       <div class="player-controls">
         <span id="nowPlaying">এখন চলছে: Physics - Chapter 1 (Intro)</span>
-        <div>
-          <label>স্পিড: </label>
-          <select class="speed-select" id="speedControl" onchange="changeSpeed(this.value)">
-            <option value="1">1.0x</option>
-            <option value="1.25">1.25x</option>
-            <option value="1.5">1.5x</option>
-            <option value="2">2.0x</option>
-          </select>
-        </div>
       </div>
     </div>
 
@@ -179,61 +173,114 @@
   <!-- Admin Panel Modal -->
   <div id="adminModal">
     <div class="admin-box">
-      <h3 style="color:var(--accent); margin-bottom:10px;">🛠️ নতুন ক্লাস লিঙ্ক যোগ করুন</h3>
+      <h3 style="color:var(--accent); text-align:center; margin-bottom:15px;">🛠️ অ্যাডমিন কন্ট্রোল প্যানেল</h3>
+      
+      <!-- Section 1: Add/Remove Students -->
+      <div class="section-title">👨‍🎓 শিক্ষার্থী পরিচালনা (Access Management)</div>
+      <input type="text" id="newStudentInput" placeholder="নতুন রোল বা মোবাইল নম্বর লিখুন">
+      <button class="btn" style="background:#238636;" onclick="addStudent()">+ শিক্ষার্থী যুক্ত করুন</button>
+
+      <div style="margin-top: 12px;">
+        <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 8px;">অনুমোদিত শিক্ষার্থীদের তালিকা:</p>
+        <div id="studentListContainer"></div>
+      </div>
+
+      <!-- Section 2: Add Class Video -->
+      <div class="section-title">🎥 নতুন ক্লাস যোগ করুন</div>
       <select id="adminSubSelect"></select>
-      <input type="text" id="chapterNameInput" placeholder="অধ্যায়ের নাম (e.g. Chapter 1: Vector)" style="width:100%; padding:8px; margin:5px 0; background:#0d1117; color:#fff; border:1px solid #30363d;">
-      <input type="text" id="videoTitleInput" placeholder="ক্লাসের শিরোনাম" style="width:100%; padding:8px; margin:5px 0; background:#0d1117; color:#fff; border:1px solid #30363d;">
-      <input type="text" id="videoUrlInput" placeholder="ইউটিউব ভিডিও Embed Link (বা ID)" style="width:100%; padding:8px; margin:5px 0; background:#0d1117; color:#fff; border:1px solid #30363d;">
+      <input type="text" id="chapterNameInput" placeholder="অধ্যায়ের নাম (e.g. Chapter 1: Vector)">
+      <input type="text" id="videoTitleInput" placeholder="ক্লাসের শিরোনাম">
+      <input type="text" id="videoUrlInput" placeholder="ইউটিউব ভিডিও Link">
       <button class="btn" onclick="saveNewVideo()">ভিডিও যোগ করুন</button>
-      <button class="btn close-btn" onclick="closeAdminPanel()">বন্ধ করুন</button>
+
+      <button class="btn close-btn" onclick="closeAdminPanel()">প্যানেল বন্ধ করুন</button>
     </div>
   </div>
 
   <script>
-    // Initial Subject & Chapter Database
+    // Default Initial Data
+    const defaultStudents = ["01711111111", "01822222222", "101", "102"];
     const initialData = {
       "Physics 1st": [
-        { chapter: "Chapter 1: ভৌতজগত ও পরিমাপ", videos: [{ title: "Class 1: মেজারমেন্ট ও ভেক্টর বেসিক", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] },
-        { chapter: "Chapter 2: ভেক্টর", videos: [{ title: "Class 1: ভেক্টর সামান্তরিক সূত্র", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }
+        { chapter: "Chapter 1: ভৌতজগত ও পরিমাপ", videos: [{ title: "Class 1: মেজারমেন্ট ও ভেক্টর বেসিক", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }
       ],
       "Chemistry 1st": [
         { chapter: "Chapter 1: ল্যাবরেটরির নিরাপদ ব্যবহার", videos: [{ title: "Class 1: ল্যাব সুরক্ষা নিয়মাবলী", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }
       ],
-      "Higher Math": [
-        { chapter: "Chapter 1: ম্যাট্রিক্স ও নির্ণায়ক", videos: [{ title: "Class 1: ম্যাট্রিক্স প্রকারভেদ", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }
-      ],
-      "ICT": [
-        { chapter: "Chapter 1: বিশ্ব ও বাংলাদেশ প্রেক্ষিত", videos: [{ title: "Class 1: ভার্চুয়াল রিয়েলিটি", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }
-      ],
-      "Bangla": [],
-      "English": []
+      "Higher Math": [],
+      "ICT": []
     };
 
+    // Load Data from LocalStorage
+    let allowedStudents = JSON.parse(localStorage.getItem('fec_allowed_students')) || defaultStudents;
     let appData = JSON.parse(localStorage.getItem('fec_app_data')) || initialData;
     let currentSubject = "Physics 1st";
 
-    // Authentication Logic
-    function sendOTP() {
-      const phone = document.getElementById('phoneInput').value;
-      if (phone.length >= 11) {
-        alert("আপনার মোবাইলে OTP পাঠানো হয়েছে! (Demo OTP: 1234)");
-        document.getElementById('otpSection').style.display = 'block';
-      } else {
-        alert("সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন।");
-      }
-    }
+    // Verification Function
+    function verifyStudent() {
+      const input = document.getElementById('studentIdInput').value.trim();
+      const error = document.getElementById('errorMsg');
 
-    function verifyOTP() {
-      const otp = document.getElementById('otpInput').value;
-      if (otp === "1234") {
+      if (allowedStudents.includes(input)) {
+        error.style.display = 'none';
         document.getElementById('authModal').style.display = 'none';
-        alert("লগইন সফল হয়েছে!");
+        alert("স্বাগতম! আপনার ভেরিফিকেশন সফল হয়েছে।");
       } else {
-        alert("ভুল OTP কোড! আবার চেষ্টা করুন।");
+        error.style.display = 'block';
       }
     }
 
-    // Load Subjects
+    // Student Management Functions
+    function renderAdminStudentList() {
+      const container = document.getElementById('studentListContainer');
+      container.innerHTML = '';
+
+      if (allowedStudents.length === 0) {
+        container.innerHTML = '<p style="font-size:12px; color:var(--text-dim);">কোনো শিক্ষার্থী অনুমোদিত নেই।</p>';
+        return;
+      }
+
+      allowedStudents.forEach((id, index) => {
+        const item = document.createElement('div');
+        item.className = 'student-list-item';
+        item.innerHTML = `
+          <span>🆔 ${id}</span>
+          <button class="btn btn-danger" onclick="removeStudent(${index})">❌ বাদ দিন</button>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function addStudent() {
+      const input = document.getElementById('newStudentInput');
+      const val = input.value.trim();
+
+      if (!val) {
+        alert("দয়া করে একটি রোল বা মোবাইল নম্বর লিখুন!");
+        return;
+      }
+
+      if (allowedStudents.includes(val)) {
+        alert("এই নম্বরটি আগেই যুক্ত করা হয়েছে!");
+        return;
+      }
+
+      allowedStudents.push(val);
+      localStorage.setItem('fec_allowed_students', JSON.stringify(allowedStudents));
+      input.value = '';
+      renderAdminStudentList();
+      alert("শিক্ষার্থী সফলভাবে যুক্ত করা হয়েছে!");
+    }
+
+    function removeStudent(index) {
+      if (confirm("আপনি কি নিশ্চিতভাবে এই শিক্ষার্থীকে বাদ দিতে চান?")) {
+        allowedStudents.splice(index, 1);
+        localStorage.setItem('fec_allowed_students', JSON.stringify(allowedStudents));
+        renderAdminStudentList();
+      }
+    }
+
+    // Render App Functions
     function renderSubjects() {
       const tabs = document.getElementById('subjectTabs');
       const adminSelect = document.getElementById('adminSubSelect');
@@ -252,7 +299,6 @@
       });
     }
 
-    // Load Chapters & Lectures
     function renderChapters() {
       const container = document.getElementById('chapterContainer');
       container.innerHTML = '';
@@ -285,8 +331,7 @@
     }
 
     function toggleChapter(index) {
-      const el = document.getElementById(`chap-${index}`);
-      el.classList.toggle('open');
+      document.getElementById(`chap-${index}`).classList.toggle('open');
     }
 
     function playVideo(url, title) {
@@ -295,10 +340,11 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Admin Panel Functions
+    // Admin Modal Controls
     function openAdminPanel() {
-      const pin = prompt("Admin Security PIN দিন (Demo PIN: 8800):");
+      const pin = prompt("Admin Security PIN দিন (PIN: 8800):");
       if (pin === "8800") {
+        renderAdminStudentList();
         document.getElementById('adminModal').style.display = 'flex';
       } else {
         alert("ভুল Admin PIN!");
@@ -336,14 +382,13 @@
       chapterObj.videos.push({ title: title, url: url });
 
       localStorage.setItem('fec_app_data', JSON.stringify(appData));
-      alert("সফলভাবে নতুন ভিডিও যোগ করা হয়েছে!");
+      alert("নতুন ভিডিও যোগ করা হয়েছে!");
       closeAdminPanel();
       renderChapters();
     }
 
-    // Init App
     renderSubjects();
     renderChapters();
   </script>
 </body>
-  </html>
+</html>
