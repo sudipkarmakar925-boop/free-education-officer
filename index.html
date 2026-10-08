@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Free Education Officer - HSC Smart Class</title>
+  <style>
+    :root {
+      --bg-dark: #0d1117;
+      --bg-card: #161b22;
+      --primary: #0a2e1d;
+      --accent: #2ea043;
+      --text: #e6edf3;
+      --text-dim: #8b949e;
+      --border: #30363d;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text); padding-bottom: 30px; }
+
+    header {
+      background: linear-gradient(135deg, #051a10, var(--primary));
+      color: #fff; padding: 20px; text-align: center;
+      border-bottom: 2px solid var(--accent);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    header h1 { font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    header p { font-size: 13px; color: #a3b8cc; margin-top: 5px; }
+
+    /* Security Overlay / Login Modal */
+    #authModal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(13, 17, 23, 0.95); display: flex; align-items: center;
+      justify-content: center; z-index: 999;
+    }
+    .auth-box {
+      background: var(--bg-card); padding: 25px; border-radius: 12px;
+      border: 1px solid var(--border); width: 90%; max-width: 380px; text-align: center;
+    }
+    .auth-box h2 { color: var(--accent); margin-bottom: 15px; font-size: 18px; }
+    .auth-box input {
+      width: 100%; padding: 12px; margin: 8px 0; border-radius: 6px;
+      border: 1px solid var(--border); background: #0d1117; color: #fff; text-align: center; font-size: 15px;
+    }
+
+    .btn {
+      background: var(--accent); color: white; border: none; padding: 10px 18px;
+      border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;
+    }
+    .btn:hover { background: #238636; }
+    .btn-admin { background: #388bfd; margin-top: 5px; }
+
+    .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
+
+    /* Tabs */
+    .subject-tabs {
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px;
+      scrollbar-width: thin; scrollbar-color: var(--accent) var(--bg-card);
+    }
+    .tab-btn {
+      background: var(--bg-card); border: 1px solid var(--border); color: var(--text);
+      padding: 10px 16px; border-radius: 20px; white-space: nowrap; cursor: pointer; font-size: 14px;
+    }
+    .tab-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+    /* Main Video Area */
+    .player-container {
+      background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border);
+      overflow: hidden; margin-top: 15px; margin-bottom: 20px;
+    }
+    .video-wrapper { position: relative; padding-bottom: 56.25%; height: 0; background: #000; }
+    .video-wrapper iframe, .video-wrapper video {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none;
+    }
+    .player-controls {
+      padding: 12px; display: flex; align-items: center; justify-content: space-between;
+      background: #0f141c; border-top: 1px solid var(--border); font-size: 13px;
+    }
+    .speed-select {
+      background: var(--bg-dark); color: #fff; border: 1px solid var(--border);
+      padding: 5px; border-radius: 4px;
+    }
+
+    /* Chapter List */
+    .chapter-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px;
+      margin-bottom: 10px; overflow: hidden;
+    }
+    .chapter-header {
+      padding: 12px 15px; background: #1c2128; font-weight: bold; cursor: pointer;
+      display: flex; justify-content: space-between; align-items: center; font-size: 15px;
+    }
+    .chapter-header:hover { color: var(--accent); }
+    .lecture-list { display: none; padding: 10px 15px; background: var(--bg-card); }
+    .lecture-list.open { display: block; }
+    .lecture-item {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 8px 0; border-bottom: 1px solid #21262d; font-size: 14px;
+    }
+    .lecture-item:last-child { border-bottom: none; }
+    .play-btn {
+      background: rgba(46, 160, 67, 0.2); color: var(--accent); border: 1px solid var(--accent);
+      padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px;
+    }
+    .play-btn:hover { background: var(--accent); color: white; }
+
+    /* Admin Panel Modal */
+    #adminModal {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 1000;
+    }
+    .admin-box {
+      background: var(--bg-card); border: 1px solid var(--border); padding: 20px;
+      border-radius: 10px; width: 90%; max-width: 450px;
+    }
+    .admin-box select {
+      width: 100%; padding: 10px; margin: 8px 0; background: #0d1117; color: #fff; border: 1px solid var(--border); border-radius: 6px;
+    }
+    .close-btn { background: #da3633; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+  <!-- App Header -->
+  <header>
+    <h1>✏️ Free Education Officer</h1>
+    <p>HSC Science & General Subjects Smart Video Platform</p>
+  </header>
+
+  <!-- Login/OTP Security Modal -->
+  <div id="authModal">
+    <div class="auth-box">
+      <h2>🔐 স্টুডেন্ট সিকিউরিটি লগইন</h2>
+      <p style="font-size:12px; color:#8b949e; margin-bottom:10px;">আপনার রেজিস্টার্ড মোবাইল নম্বর দিয়ে প্রবেশ করুন</p>
+      <input type="text" id="phoneInput" placeholder="মোবাইল নম্বর (e.g. 017xxxxxxxx)">
+      <button class="btn" onclick="sendOTP()">OTP পাঠান</button>
+      
+      <div id="otpSection" style="display:none; margin-top:10px;">
+        <input type="text" id="otpInput" placeholder="4-ডিজিটের OTP কোড (Demo: 1234)">
+        <button class="btn" onclick="verifyOTP()">লগইন নিশ্চিত করুন</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Top Action Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <span style="font-size: 13px; color: var(--text-dim);">বিষয় নির্বাচন করুন:</span>
+      <button class="btn btn-admin" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="openAdminPanel()">⚙️ Admin Panel</button>
+    </div>
+
+    <!-- Subject Tabs -->
+    <div class="subject-tabs" id="subjectTabs"></div>
+
+    <!-- Video Player Area -->
+    <div class="player-container">
+      <div class="video-wrapper" id="videoContainer">
+        <iframe id="mainIframe" src="https://www.youtube.com/embed/tgbNymZ7vqY" allowfullscreen></iframe>
+      </div>
+      <div class="player-controls">
+        <span id="nowPlaying">এখন চলছে: Physics - Chapter 1 (Intro)</span>
+        <div>
+          <label>স্পিড: </label>
+          <select class="speed-select" id="speedControl" onchange="changeSpeed(this.value)">
+            <option value="1">1.0x</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2.0x</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chapter & Video List -->
+    <h3 style="margin-bottom: 10px; font-size: 16px;">📚 অধ্যায় ও ক্লাস তালিকা</h3>
+    <div id="chapterContainer"></div>
+  </div>
+
+  <!-- Admin Panel Modal -->
+  <div id="adminModal">
+    <div class="admin-box">
+      <h3 style="color:var(--accent); margin-bottom:10px;">🛠️ নতুন ক্লাস লিঙ্ক যোগ করুন</h3>
+      <select id="adminSubSelect"></select>
+      <input type="text" id="chapterNameInput" placeholder="অধ্যায়ের নাম (e.g. Chapter 1: Vector)" style="width:100%; padding:8px; margin:5px 0; background:#0d1117; color:#fff; border:1px solid #30363d;">
+      <input type="text" id="videoTitleInput" placeholder="ক্লাসের শিরোনাম" style="width:100%; padding:8px; margin:5px 0; background:#0d1117; color:#fff; border:1px solid #30363d;">
+      <input type="text" id="videoUrlInput" placeholder="ইউটিউব ভিডিও Embed Link (বা ID)" style="width:100%; padding:8px; margin:5px 0; background:#0d1117; color:#fff; border:1px solid #30363d;">
+      <button class="btn" onclick="saveNewVideo()">ভিডিও যোগ করুন</button>
+      <button class="btn close-btn" onclick="closeAdminPanel()">বন্ধ করুন</button>
+    </div>
+  </div>
+
+  <script>
+    // Initial Subject & Chapter Database
+    const initialData = {
+      "Physics 1st": [
+        { chapter: "Chapter 1: ভৌতজগত ও পরিমাপ", videos: [{ title: "Class 1: মেজারমেন্ট ও ভেক্টর বেসিক", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] },
+        { chapter: "Chapter 2: ভেক্টর", videos: [{ title: "Class 1: ভেক্টর সামান্তরিক সূত্র", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }
+      ],
+      "Chemistry 1st": [
+        { chapter: "Chapter 1: ল্যাবরেটরির নিরাপদ ব্যবহার", videos: [{ title: "Class 1: ল্যাব সুরক্ষা নিয়মাবলী", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }
+      ],
+      "Higher Math": [
+        { chapter: "Chapter 1: ম্যাট্রিক্স ও নির্ণায়ক", videos: [{ title: "Class 1: ম্যাট্রিক্স প্রকারভেদ", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }
+      ],
+      "ICT": [
+        { chapter: "Chapter 1: বিশ্ব ও বাংলাদেশ প্রেক্ষিত", videos: [{ title: "Class 1: ভার্চুয়াল রিয়েলিটি", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }
+      ],
+      "Bangla": [],
+      "English": []
+    };
+
+    let appData = JSON.parse(localStorage.getItem('fec_app_data')) || initialData;
+    let currentSubject = "Physics 1st";
+
+    // Authentication Logic
+    function sendOTP() {
+      const phone = document.getElementById('phoneInput').value;
+      if (phone.length >= 11) {
+        alert("আপনার মোবাইলে OTP পাঠানো হয়েছে! (Demo OTP: 1234)");
+        document.getElementById('otpSection').style.display = 'block';
+      } else {
+        alert("সঠিক ১১ ডিজিটের মোবাইল নম্বর দিন।");
+      }
+    }
+
+    function verifyOTP() {
+      const otp = document.getElementById('otpInput').value;
+      if (otp === "1234") {
+        document.getElementById('authModal').style.display = 'none';
+        alert("লগইন সফল হয়েছে!");
+      } else {
+        alert("ভুল OTP কোড! আবার চেষ্টা করুন।");
+      }
+    }
+
+    // Load Subjects
+    function renderSubjects() {
+      const tabs = document.getElementById('subjectTabs');
+      const adminSelect = document.getElementById('adminSubSelect');
+      tabs.innerHTML = ''; adminSelect.innerHTML = '';
+
+      Object.keys(appData).forEach(sub => {
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${sub === currentSubject ? 'active' : ''}`;
+        btn.innerText = sub;
+        btn.onclick = () => { currentSubject = sub; renderSubjects(); renderChapters(); };
+        tabs.appendChild(btn);
+
+        const option = document.createElement('option');
+        option.value = sub; option.innerText = sub;
+        adminSelect.appendChild(option);
+      });
+    }
+
+    // Load Chapters & Lectures
+    function renderChapters() {
+      const container = document.getElementById('chapterContainer');
+      container.innerHTML = '';
+      const chapters = appData[currentSubject] || [];
+
+      if(chapters.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-dim); text-align:center; padding:20px;">এই বিষয়ে এখনও কোনো ক্লাস যুক্ত করা হয়নি।</p>`;
+        return;
+      }
+
+      chapters.forEach((ch, cIndex) => {
+        const card = document.createElement('div');
+        card.className = 'chapter-card';
+        card.innerHTML = `
+          <div class="chapter-header" onclick="toggleChapter(${cIndex})">
+            <span>📖 ${ch.chapter}</span>
+            <small>(${ch.videos.length} টি ক্লাস)</small>
+          </div>
+          <div class="lecture-list" id="chap-${cIndex}">
+            ${ch.videos.map(v => `
+              <div class="lecture-item">
+                <span>▶️ ${v.title}</span>
+                <button class="play-btn" onclick="playVideo('${v.url}', '${v.title}')">দেখুন</button>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function toggleChapter(index) {
+      const el = document.getElementById(`chap-${index}`);
+      el.classList.toggle('open');
+    }
+
+    function playVideo(url, title) {
+      document.getElementById('mainIframe').src = url;
+      document.getElementById('nowPlaying').innerText = "এখন চলছে: " + title;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Admin Panel Functions
+    function openAdminPanel() {
+      const pin = prompt("Admin Security PIN দিন (Demo PIN: 8800):");
+      if (pin === "8800") {
+        document.getElementById('adminModal').style.display = 'flex';
+      } else {
+        alert("ভুল Admin PIN!");
+      }
+    }
+
+    function closeAdminPanel() {
+      document.getElementById('adminModal').style.display = 'none';
+    }
+
+    function saveNewVideo() {
+      const sub = document.getElementById('adminSubSelect').value;
+      const chapName = document.getElementById('chapterNameInput').value;
+      const title = document.getElementById('videoTitleInput').value;
+      let url = document.getElementById('videoUrlInput').value;
+
+      if (!chapName || !title || !url) {
+        alert("সবগুলো তথ্য সঠিকভাবে পূরণ করুন!");
+        return;
+      }
+
+      if(!url.includes('embed')) {
+        const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+        const match = url.match(regExp);
+        if (match && match[2].length == 11) {
+          url = `https://www.youtube.com/embed/${match[2]}`;
+        }
+      }
+
+      let chapterObj = appData[sub].find(c => c.chapter === chapName);
+      if(!chapterObj) {
+        chapterObj = { chapter: chapName, videos: [] };
+        appData[sub].push(chapterObj);
+      }
+      chapterObj.videos.push({ title: title, url: url });
+
+      localStorage.setItem('fec_app_data', JSON.stringify(appData));
+      alert("সফলভাবে নতুন ভিডিও যোগ করা হয়েছে!");
+      closeAdminPanel();
+      renderChapters();
+    }
+
+    // Init App
+    renderSubjects();
+    renderChapters();
+  </script>
+</body>
+  </html>
