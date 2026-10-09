@@ -194,8 +194,8 @@
   </div>
 
   <script>
-    // SHA-256 Encrypted Hash for PIN: '2211180172'
-    const ENCRYPTED_ADMIN_PIN = "0356ae2707ee4bfa9d00bc0fca566a7b758b991ee73801ea1eb07d2f342cb233";
+    // Exact Admin PIN
+    const ADMIN_PIN = "2211180172";
 
     // Default Initial Data
     const defaultStudents = ["01711111111", "01822222222", "101", "102", "1234"];
@@ -226,14 +226,6 @@
 
     let currentSubject = "Physics 1st";
 
-    // SHA-256 Hashing helper
-    async function hashPin(pin) {
-      const msgBuffer = new TextEncoder().encode(pin);
-      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    }
-
     // Secret Triple-click Gesture
     let clickCount = 0;
     let clickTimer;
@@ -263,16 +255,17 @@
     }
 
     // Admin Access Verification
-    async function openAdminPanel() {
-      const pin = prompt("Admin Security PIN দিন:");
-      if (!pin) return;
-      const hashedInput = await hashPin(pin.trim());
+    function openAdminPanel() {
+      const inputPin = prompt("Admin Security PIN দিন:");
+      if (inputPin === null) return; // User cancelled
       
-      if (hashedInput === ENCRYPTED_ADMIN_PIN) {
+      const cleanPin = String(inputPin).trim();
+      
+      if (cleanPin === ADMIN_PIN) {
         renderAdminStudentList();
         document.getElementById('adminModal').style.display = 'flex';
       } else {
-        alert("ভুল Admin PIN!");
+        alert("ভুল Admin PIN! আপনি প্রবেশ করিয়েছেন: " + cleanPin);
       }
     }
 
@@ -416,4 +409,4 @@
     renderChapters();
   </script>
 </body>
-        </html>
+</html>
