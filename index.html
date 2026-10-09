@@ -139,7 +139,7 @@
     <div class="auth-box">
       <h2>🔐 স্টুডেন্ট সিকিউরিটি ভেরিফিকেশন</h2>
       <p>আপনার অনুমোদিত মোবাইল নম্বর বা রোল নম্বরটি লিখুন</p>
-      <input type="text" id="studentIdInput" placeholder="মোবাইল বা রোল নম্বর (e.g. 01711111111)">
+      <input type="text" id="studentIdInput" placeholder="মোবাইল বা রোল নম্বর (e.g. 101)">
       <button class="btn" onclick="verifyStudent()">প্রবেশ করুন</button>
       <div id="errorMsg">⚠️ ক্ষমা করবেন! আপনার নম্বরটি অনুমোদিত তালিকায় নেই। শিক্ষকের সাথে যোগাযোগ করুন।</div>
     </div>
@@ -161,7 +161,7 @@
         <iframe id="mainIframe" src="https://www.youtube.com/embed/tgbNymZ7vqY" allowfullscreen></iframe>
       </div>
       <div class="player-controls">
-        <span id="nowPlaying">এখন চলছে: Physics - Chapter 1 (Intro)</span>
+        <span id="nowPlaying">এখন চলছে: Physics 1st Paper - Chapter 1</span>
       </div>
     </div>
 
@@ -199,21 +199,41 @@
 
   <script>
     // Default Initial Data
-    const defaultStudents = ["01971856959", "01822222222", "101", "102"];
+    const defaultStudents = ["2211180172", "01822222222", "101", "102", "1234"];
+    
+    // Complete List of Subjects
     const initialData = {
       "Physics 1st": [
         { chapter: "Chapter 1: ভৌতজগত ও পরিমাপ", videos: [{ title: "Class 1: মেজারমেন্ট ও ভেক্টর বেসিক", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }
       ],
+      "Physics 2nd": [],
       "Chemistry 1st": [
         { chapter: "Chapter 1: ল্যাবরেটরির নিরাপদ ব্যবহার", videos: [{ title: "Class 1: ল্যাব সুরক্ষা নিয়মাবলী", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }
       ],
-      "Higher Math": [],
+      "Chemistry 2nd": [],
+      "Higher Math 1st": [],
+      "Higher Math 2nd": [],
+      "Biology 1st": [],
+      "Biology 2nd": [],
+      "Bangla": [],
+      "English": [],
       "ICT": []
     };
 
-    // Load Data from LocalStorage
+    // Reset app data on update to load new subjects structure
     let allowedStudents = JSON.parse(localStorage.getItem('fec_allowed_students')) || defaultStudents;
-    let appData = JSON.parse(localStorage.getItem('fec_app_data')) || initialData;
+    let storedAppData = JSON.parse(localStorage.getItem('fec_app_data'));
+    
+    // Ensure all new subjects exist in appData
+    let appData = initialData;
+    if (storedAppData) {
+      Object.keys(initialData).forEach(sub => {
+        if (storedAppData[sub]) {
+          appData[sub] = storedAppData[sub];
+        }
+      });
+    }
+
     let currentSubject = "Physics 1st";
 
     // Verification Function
@@ -305,7 +325,7 @@
       const chapters = appData[currentSubject] || [];
 
       if(chapters.length === 0) {
-        container.innerHTML = `<p style="color:var(--text-dim); text-align:center; padding:20px;">এই বিষয়ে এখনও কোনো ক্লাস যুক্ত করা হয়নি।</p>`;
+        container.innerHTML = `<p style="color:var(--text-dim); text-align:center; padding:20px;">এই বিষয়ে এখনও কোনো ক্লাস যুক্ত করা হয়নি। Admin Panel থেকে ভিডিও যোগ করুন।</p>`;
         return;
       }
 
@@ -391,4 +411,4 @@
     renderChapters();
   </script>
 </body>
-</html>
+  </html>
