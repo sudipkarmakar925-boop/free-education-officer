@@ -24,11 +24,12 @@
       color: #fff; padding: 20px; text-align: center;
       border-bottom: 2px solid var(--accent);
       box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      user-select: none;
     }
-    header h1 { font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 10px; }
+    header h1 { font-size: 22px; display: flex; align-items: center; justify-content: center; gap: 10px; cursor: pointer; }
     header p { font-size: 13px; color: #a3b8cc; margin-top: 5px; }
 
-    /* Security Overlay / Login Modal */
+    /* Login Modal */
     #authModal {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(13, 17, 23, 0.98); display: flex; align-items: center;
@@ -50,14 +51,13 @@
       border-radius: 6px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 10px;
     }
     .btn:hover { background: #238636; }
-    .btn-admin { background: #388bfd; margin-top: 5px; }
     .btn-danger { background: var(--danger); padding: 4px 8px; font-size: 12px; width: auto; margin: 0; }
 
     .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
 
     /* Tabs */
     .subject-tabs {
-      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px;
+      display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-top: 10px;
       scrollbar-width: thin; scrollbar-color: var(--accent) var(--bg-card);
     }
     .tab-btn {
@@ -128,9 +128,9 @@
 </head>
 <body>
 
-  <!-- App Header -->
+  <!-- App Header with Secret Triple-Click Gesture -->
   <header>
-    <h1>✏️ Free Education Officer</h1>
+    <h1 id="appTitle" onclick="handleSecretClick()">✏️ Free Education Officer</h1>
     <p>HSC Science & General Subjects Smart Video Platform</p>
   </header>
 
@@ -146,11 +146,7 @@
   </div>
 
   <div class="container">
-    <!-- Top Action Bar -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-      <span style="font-size: 13px; color: var(--text-dim);">বিষয় নির্বাচন করুন:</span>
-      <button class="btn btn-admin" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="openAdminPanel()">⚙️ Admin Panel</button>
-    </div>
+    <span style="font-size: 13px; color: var(--text-dim);">বিষয় নির্বাচন করুন:</span>
 
     <!-- Subject Tabs -->
     <div class="subject-tabs" id="subjectTabs"></div>
@@ -198,18 +194,16 @@
   </div>
 
   <script>
+    // SHA-256 Encrypted Hash for PIN: '2211180172'
+    const ENCRYPTED_ADMIN_PIN = "0356ae2707ee4bfa9d00bc0fca566a7b758b991ee73801ea1eb07d2f342cb233";
+
     // Default Initial Data
-    const defaultStudents = ["2211180172", "01822222222", "101", "102", "1234"];
+    const defaultStudents = ["01711111111", "01822222222", "101", "102", "1234"];
     
-    // Complete List of Subjects
     const initialData = {
-      "Physics 1st": [
-        { chapter: "Chapter 1: ভৌতজগত ও পরিমাপ", videos: [{ title: "Class 1: মেজারমেন্ট ও ভেক্টর বেসিক", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }
-      ],
+      "Physics 1st": [{ chapter: "Chapter 1: ভৌতজগত ও পরিমাপ", videos: [{ title: "Class 1: মেজারমেন্ট ও ভেক্টর বেসিক", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }],
       "Physics 2nd": [],
-      "Chemistry 1st": [
-        { chapter: "Chapter 1: ল্যাবরেটরির নিরাপদ ব্যবহার", videos: [{ title: "Class 1: ল্যাব সুরক্ষা নিয়মাবলী", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }
-      ],
+      "Chemistry 1st": [{ chapter: "Chapter 1: ল্যাবরেটরির নিরাপদ ব্যবহার", videos: [{ title: "Class 1: ল্যাব সুরক্ষা নিয়মাবলী", url: "https://www.youtube.com/embed/tgbNymZ7vqY" }] }],
       "Chemistry 2nd": [],
       "Higher Math 1st": [],
       "Higher Math 2nd": [],
@@ -220,21 +214,39 @@
       "ICT": []
     };
 
-    // Reset app data on update to load new subjects structure
     let allowedStudents = JSON.parse(localStorage.getItem('fec_allowed_students')) || defaultStudents;
     let storedAppData = JSON.parse(localStorage.getItem('fec_app_data'));
     
-    // Ensure all new subjects exist in appData
     let appData = initialData;
     if (storedAppData) {
       Object.keys(initialData).forEach(sub => {
-        if (storedAppData[sub]) {
-          appData[sub] = storedAppData[sub];
-        }
+        if (storedAppData[sub]) appData[sub] = storedAppData[sub];
       });
     }
 
     let currentSubject = "Physics 1st";
+
+    // SHA-256 Hashing helper
+    async function hashPin(pin) {
+      const msgBuffer = new TextEncoder().encode(pin);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Secret Triple-click Gesture
+    let clickCount = 0;
+    let clickTimer;
+    function handleSecretClick() {
+      clickCount++;
+      clearTimeout(clickTimer);
+      if (clickCount === 3) {
+        clickCount = 0;
+        openAdminPanel();
+      } else {
+        clickTimer = setTimeout(() => { clickCount = 0; }, 800);
+      }
+    }
 
     // Verification Function
     function verifyStudent() {
@@ -248,6 +260,24 @@
       } else {
         error.style.display = 'block';
       }
+    }
+
+    // Admin Access Verification
+    async function openAdminPanel() {
+      const pin = prompt("Admin Security PIN দিন:");
+      if (!pin) return;
+      const hashedInput = await hashPin(pin.trim());
+      
+      if (hashedInput === ENCRYPTED_ADMIN_PIN) {
+        renderAdminStudentList();
+        document.getElementById('adminModal').style.display = 'flex';
+      } else {
+        alert("ভুল Admin PIN!");
+      }
+    }
+
+    function closeAdminPanel() {
+      document.getElementById('adminModal').style.display = 'none';
     }
 
     // Student Management Functions
@@ -275,15 +305,8 @@
       const input = document.getElementById('newStudentInput');
       const val = input.value.trim();
 
-      if (!val) {
-        alert("দয়া করে একটি রোল বা মোবাইল নম্বর লিখুন!");
-        return;
-      }
-
-      if (allowedStudents.includes(val)) {
-        alert("এই নম্বরটি আগেই যুক্ত করা হয়েছে!");
-        return;
-      }
+      if (!val) { alert("দয়া করে একটি রোল বা মোবাইল নম্বর লিখুন!"); return; }
+      if (allowedStudents.includes(val)) { alert("এই নম্বরটি আগেই যুক্ত করা হয়েছে!"); return; }
 
       allowedStudents.push(val);
       localStorage.setItem('fec_allowed_students', JSON.stringify(allowedStudents));
@@ -325,7 +348,7 @@
       const chapters = appData[currentSubject] || [];
 
       if(chapters.length === 0) {
-        container.innerHTML = `<p style="color:var(--text-dim); text-align:center; padding:20px;">এই বিষয়ে এখনও কোনো ক্লাস যুক্ত করা হয়নি। Admin Panel থেকে ভিডিও যোগ করুন।</p>`;
+        container.innerHTML = `<p style="color:var(--text-dim); text-align:center; padding:20px;">এই বিষয়ে এখনও কোনো ক্লাস যুক্ত করা হয়নি।</p>`;
         return;
       }
 
@@ -360,31 +383,13 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // Admin Modal Controls
-    function openAdminPanel() {
-      const pin = prompt("Admin Security PIN দিন (PIN: 8800):");
-      if (pin === "8800") {
-        renderAdminStudentList();
-        document.getElementById('adminModal').style.display = 'flex';
-      } else {
-        alert("ভুল Admin PIN!");
-      }
-    }
-
-    function closeAdminPanel() {
-      document.getElementById('adminModal').style.display = 'none';
-    }
-
     function saveNewVideo() {
       const sub = document.getElementById('adminSubSelect').value;
       const chapName = document.getElementById('chapterNameInput').value;
       const title = document.getElementById('videoTitleInput').value;
       let url = document.getElementById('videoUrlInput').value;
 
-      if (!chapName || !title || !url) {
-        alert("সবগুলো তথ্য সঠিকভাবে পূরণ করুন!");
-        return;
-      }
+      if (!chapName || !title || !url) { alert("সবগুলো তথ্য সঠিকভাবে পূরণ করুন!"); return; }
 
       if(!url.includes('embed')) {
         const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
